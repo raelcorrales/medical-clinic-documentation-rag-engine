@@ -1,54 +1,54 @@
-# TASK: 3. Motor RAG Asíncrono sobre Documentación Médica/Clínica
+# TASK: 3. Asynchronous RAG Engine over Medical/Clinical Documentation
 
-## 📌 Contexto
-Este proyecto tiene como objetivo construir un sistema de Recuperación Aumentada por Generación (RAG) especializado en procesar e interrogar documentación clínica normativa (como Procedimientos Normalizados de Operación o lineamientos ISO 15189)[cite: 7]. Se enfoca en integrar las capacidades de ingeniería de datos y desarrollo backend asíncrono con modelos fundacionales (LLMs) y bases de datos vectoriales.
+## 📌 Context
+The goal of this project is to build an asynchronous Retrieval-Augmented Generation (RAG) system specialized in processing and querying normative clinical documentation (such as Standard Operating Procedures - SOPs or ISO 15189 guidelines). It focuses on integrating data engineering and asynchronous backend development with foundation models (LLMs) and vector databases.
 
 ## 🛠️ Tech Stack
-*   **Lenguaje:** Python 3.12+
-*   **Framework Web:** FastAPI (async)
-*   **Framework LLM/Agentes:** LangChain
-*   **Base de Datos Vectorial:** ChromaDB o OpenSearch local (vía Docker)
-*   **Modelos AI:** OpenAI API (GPT-4o / text-embedding-3) o Google Vertex AI[cite: 8, 18]
-*   **Procesamiento de PDF:** `PyMuPDF` o `pdfplumber`
-*   **Testing:** `pytest`
+*   **Language:** Python 3.12+ (tested on Python 3.14)
+*   **Web Framework:** FastAPI (async)
+*   **LLM/Agent Framework:** LangChain (LCEL)
+*   **Vector Database:** Elasticsearch 8.15+ (via Docker with dense HNSW vector search) / ChromaDB
+*   **AI Models:** Ollama (`llama3.2` / `nomic-embed-text`) / OpenAI API (`gpt-4o-mini` / `text-embedding-3-small`) / vLLM compatible
+*   **PDF Processing:** `PyMuPDF` (`fitz`)
+*   **Testing:** `pytest` & `pytest-asyncio`
 
 ---
 
-## 📋 Checklist de Implementación
+## 📋 Implementation Checklist
 
-### Fase 1: Configuración del Entorno y Base Vectorial
-- [x] Inicializar una nueva rama o directorio para el Motor RAG.
-- [x] Instalar dependencias clave: `fastapi`, `langchain`, `langchain-ollama`, `langchain-elasticsearch`, `elasticsearch`, `pymupdf`.
-- [x] Configurar el `docker-compose.yml` para incluir una instancia de Elasticsearch 8.x lista para millones de documentos.
-- [x] Gestionar las claves y endpoints (Ollama remoto / Elasticsearch) utilizando variables de entorno y `pydantic-settings`.
+### Phase 1: Environment Setup and Vector Base
+- [x] Initialize a branch/directory for the RAG Engine.
+- [x] Install core dependencies: `fastapi`, `langchain`, `langchain-ollama`, `langchain-elasticsearch`, `elasticsearch`, `pymupdf`.
+- [x] Configure `docker-compose.yml` to launch an Elasticsearch 8.x instance ready for scale.
+- [x] Manage API keys and endpoints (remote Ollama / Elasticsearch) using environment variables and `pydantic-settings`.
 
-### Fase 2: Pipeline de Ingesta y Procesamiento de Documentos (ETL)
-- [x] Crear el módulo `app/services/document_loader.py`.
-- [x] Implementar la función asíncrona `load_and_extract_text(file_path: str)` para leer archivos PDF (PNO o guías clínicas con PyMuPDF).
-- [x] Implementar la función `chunk_documents(documents: list)` utilizando `RecursiveCharacterTextSplitter` de LangChain preservando metadatos (página, fuente).
-- [x] Crear el servicio `app/services/vector_store.py`.
-- [x] Implementar la función `embed_and_index_chunks(chunks: list)` que utilice el modelo de *embeddings* seleccionado (`nomic-embed-text` vía Ollama) para vectorizar los fragmentos y almacenarlos en Elasticsearch.
+### Phase 2: Document Ingestion and Processing Pipeline (ETL)
+- [x] Create the `app/services/document_loader.py` module.
+- [x] Implement the asynchronous function `load_and_extract_text(file_path: str)` to read PDF files (SOP manuals or clinical guidelines with PyMuPDF).
+- [x] Implement the `chunk_documents(documents: list)` function using LangChain's `RecursiveCharacterTextSplitter`, preserving page and source metadata.
+- [x] Create the `app/services/vector_store.py` service.
+- [x] Implement the `embed_and_index_chunks(chunks: list)` function using the configured embeddings model (`nomic-embed-text` via Ollama) to vectorize and index chunks in Elasticsearch.
 
-### Fase 3: Cadena de Recuperación y Generación (RAG Chain)
-- [x] Crear el módulo `app/services/rag_engine.py`.
-- [x] Configurar el recuperador (*Retriever*) para consultar Elasticsearch buscando los *chunks* más relevantes (*Top-K*).
-- [x] Diseñar el *Prompt Template* para restringir al modelo. **Instrucción crítica:** El modelo responde exclusivamente basándose en el contexto recuperado y reporta si la información no se encuentra en el documento.
-- [x] Ensamblar la cadena RAG utilizando LCEL (LangChain Expression Language) integrando el recuperador, el *prompt* y el LLM (`llama3.2` vía Ollama).
+### Phase 3: Retrieval and Generation Chain (RAG Chain)
+- [x] Create the `app/services/rag_engine.py` module.
+- [x] Configure the Retriever to query Elasticsearch for the most relevant chunks (*Top-K*).
+- [x] Design the *Prompt Template* to enforce zero-hallucination. **Critical instruction:** The model responds exclusively based on retrieved context and explicitly reports when information is not found in the documents.
+- [x] Assemble the RAG chain using LCEL (LangChain Expression Language), integrating the retriever, prompt template, and LLM (`llama3.2` via Ollama).
 
-### Fase 4: Endpoints de la API (FastAPI)
-- [x] Configurar el router en `app/api/v1/rag.py` y montar en `app/main.py`.
-- [x] Implementar `POST /api/v1/rag/ingest`: Endpoint para subir un archivo PDF, procesarlo y cargar los *embeddings* en la base vectorial.
-- [x] Implementar `POST /api/v1/rag/query`: Endpoint que reciba una pregunta en JSON, ejecute la cadena RAG y retorne la respuesta junto con los fragmentos de texto fuente (*source documents*) utilizados.
+### Phase 4: API Endpoints (FastAPI)
+- [x] Configure router in `app/api/v1/rag.py` and mount in `app/main.py`.
+- [x] Implement `POST /api/v1/rag/ingest`: Endpoint to upload a PDF file, process it, and index embeddings into the vector database.
+- [x] Implement `POST /api/v1/rag/query`: Endpoint receiving a JSON question, executing the RAG chain, and returning the answer alongside source document metadata (*source documents*).
 
-### Fase 5: Pruebas y Validación
-- [x] Escribir pruebas unitarias para validar que el *text splitter* divide correctamente los documentos sin perder información crítica ni metadatos.
-- [x] Escribir una prueba de integración para el endpoint de consulta (`/api/v1/rag/query`), mockeando la llamada al LLM externo para asegurar que la cadena se ejecuta correctamente.
-- [x] Ingestar un documento clínico de prueba (PNO-LAB-014 de Valores Críticos bajo ISO 15189) y verificar cualitativamente la exactitud de las respuestas.
+### Phase 5: Testing and Validation
+- [x] Write unit tests verifying that the text splitter partitions documents correctly without losing critical clinical information or metadata.
+- [x] Write an integration test for the query endpoint (`/api/v1/rag/query`), mocking external LLM calls to ensure the chain runs properly.
+- [x] Ingest sample clinical documents (SOP for Critical Panic Values under ISO 15189) and qualitatively verify response accuracy.
 
 ---
 
-## 🎯 Definición de Terminado (Definition of Done - DoD)
-- [x] El sistema permite subir un documento PDF a través de la API y este es indexado exitosamente en la base de datos vectorial.
-- [x] Las consultas al endpoint de *query* retornan respuestas coherentes, limitadas al contexto del documento proveído.
-- [x] La respuesta de la API incluye los metadatos de los documentos fuente (ej. nombre del archivo, número de página) para permitir la trazabilidad de la información.
-- [x] El código está modularizado, tipado y validado mediante pruebas locales.
+## 🎯 Definition of Done (DoD)
+- [x] The system allows uploading a PDF document via the API and successfully indexing it into the vector database.
+- [x] Queries to the query endpoint return coherent answers strictly limited to the provided document context.
+- [x] The API response includes source document metadata (file name, page number, snippet) for complete clinical traceability.
+- [x] The codebase is modularized, typed, and validated through local tests.

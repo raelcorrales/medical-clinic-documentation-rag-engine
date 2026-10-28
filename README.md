@@ -1,53 +1,53 @@
-# Motor RAG Asíncrono sobre Documentación Médica / Clínica
+# Asynchronous Clinical / Medical Document RAG Engine
 
-Sistema de Recuperación Aumentada por Generación (RAG) asíncrono para interrogar documentación clínica normativa (Procedimientos Normalizados de Operación - PNOs, guías de laboratorio e ISO 15189), garantizando estricta adherencia al contexto y trazabilidad de fuentes.
-
----
-
-## 🛠️ Stack Tecnológico
-
-- **Framework Web:** [FastAPI](https://fastapi.tiangolo.com/) (Asíncrono)
-- **Base Vectorial:** [Elasticsearch 8.15](https://www.elastic.co/) (Búsqueda vectorial dense HNSW en Docker)
-- **Modelos LLM & Embeddings:** [Ollama](https://ollama.com/) en red local (`nomic-embed-text` + `llama3.2`) con fallback a OpenAI
-- **Procesamiento de PDF:** [PyMuPDF](https://pymupdf.readthedocs.io/)
-- **Orquestación RAG:** [LangChain](https://www.langchain.com/) (LCEL)
-- **Testing:** [pytest](https://docs.pytest.org/) con `pytest-asyncio`
+An asynchronous Retrieval-Augmented Generation (RAG) system for querying normative clinical documentation (Standard Operating Procedures - SOPs, laboratory guidelines, and ISO 15189), ensuring strict adherence to context and complete source traceability.
 
 ---
 
-## 🚀 Inicio Rápido
+## 🛠️ Tech Stack
 
-### 1. Requisitos Previos
-- Docker Desktop activo
-- Servidor Ollama disponible en `http://192.168.3.4:11434` (o local) con los modelos `llama3.2` y `nomic-embed-text`
+- **Web Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Fully Asynchronous)
+- **Vector Database:** [Elasticsearch 8.15](https://www.elastic.co/) (Dense HNSW vector search running in Docker)
+- **LLM & Embedding Models:** [Ollama](https://ollama.com/) on local LAN (`nomic-embed-text` + `llama3.2`) with seamless fallback/extensibility to vLLM and OpenAI
+- **PDF Processing:** [PyMuPDF](https://pymupdf.readthedocs.io/)
+- **RAG Orchestration:** [LangChain](https://www.langchain.com/) (LCEL)
+- **Testing:** [pytest](https://docs.pytest.org/) with `pytest-asyncio`
 
-### 2. Iniciar Elasticsearch
+---
+
+## 🚀 Quickstart
+
+### 1. Prerequisites
+- Docker Desktop running
+- Ollama server available at `http://192.168.3.4:11434` (or localhost) with `llama3.2` and `nomic-embed-text` models pulled
+
+### 2. Start Elasticsearch
 ```bash
 docker compose up -d
 ```
 
-### 3. Activar Entorno Virtual e Instalar Dependencias
+### 3. Activate Virtual Environment and Install Dependencies
 ```bash
-# En Windows:
+# On Windows:
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Ejecutar la API
+### 4. Run the API Server
 ```bash
 .\.venv\Scripts\uvicorn app.main:app --reload --port 8000
 ```
-- Documentación Swagger interactiva: `http://localhost:8000/docs`
+- Interactive Swagger UI documentation: `http://localhost:8000/docs`
 - Health check: `http://localhost:8000/health`
 
 ---
 
-## 📡 Endpoints de la API
+## 📡 API Endpoints
 
-### Ingesta de Documentos PDF
-- **Ruta:** `POST /api/v1/rag/ingest`
-- **Body:** `multipart/form-data` con campo `file` (.pdf)
-- **Respuesta:**
+### PDF Document Ingestion
+- **Route:** `POST /api/v1/rag/ingest`
+- **Body:** `multipart/form-data` with `file` field (.pdf)
+- **Response:**
 ```json
 {
   "message": "Documento procesado e indexado exitosamente.",
@@ -57,20 +57,20 @@ pip install -r requirements.txt
 }
 ```
 
-### Consulta RAG Clínica
-- **Ruta:** `POST /api/v1/rag/query`
+### Clinical RAG Query
+- **Route:** `POST /api/v1/rag/query`
 - **Body:**
 ```json
 {
-  "question": "¿Cuáles son los valores de pánico para el potasio sérico?",
+  "question": "What are the panic/critical values for serum potassium?",
   "top_k": 4
 }
 ```
-- **Respuesta:**
+- **Response:**
 ```json
 {
-  "query": "¿Cuáles son los valores de pánico para el potasio sérico?",
-  "answer": "Según el contexto clínico proporcionado, los valores de pánico para el potasio sérico son: Menor de 2.8 mEq/L o Mayor de 6.2 mEq/L (riesgo inmediato de arritmia letal).",
+  "query": "What are the panic/critical values for serum potassium?",
+  "answer": "According to the provided clinical context, the panic values for serum potassium are: Below 2.8 mEq/L or Above 6.2 mEq/L (immediate risk of fatal arrhythmia).",
   "sources": [
     {
       "source": "pno_valores_criticos.pdf",
@@ -83,7 +83,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🧪 Pruebas Automatizadas
+## 🧪 Automated Testing
 
 ```bash
 .\.venv\Scripts\pytest -v
